@@ -32,11 +32,11 @@ never breaks. To parse real uploaded photos:
 
 ```bash
 cp .env.example .env.local
-# then set ANTHROPIC_API_KEY=sk-ant-... in .env.local
+# then set GEMINI_API_KEY=... in .env.local
 ```
 
 `app/api/parse-diagram/route.ts` sends the uploaded image to a multimodal
-Claude model with a strict JSON schema prompt and validates the response
+Gemini 2.5 Flash model with a strict JSON schema prompt and validates the response
 before using it; any failure (missing key, network error, malformed JSON,
 schema mismatch) silently falls back to a sample diagram rather than
 breaking the experience.

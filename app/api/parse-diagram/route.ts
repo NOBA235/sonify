@@ -4,6 +4,9 @@ import { DiagramData, DiagramResponse } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
 const SYSTEM_PROMPT = `You are the vision pipeline for SonifySTEM AI, an accessibility tool that converts STEM diagrams into spatial audio for blind and low-vision students.
 
 Analyze the uploaded diagram image (a graph, circuit, or biology diagram) and respond with STRICT JSON ONLY — no prose, no markdown code fences, no text outside the JSON object — matching exactly this schema:
@@ -42,13 +45,13 @@ export async function POST(req: NextRequest) {
     } else if (contentType.includes('application/json')) {
       const body = await req.json();
       if (body?.image) {
-        const match = /^data:(image\/\w+);base64,/.exec(body.image);
+        const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,/.exec(body.image);
         if (match) mediaType = match[1];
-        base64Image = body.image.replace(/^data:image\/\w+;base64,/, '');
+        base64Image = body.image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
       }
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!base64Image) {
       return NextResponse.json(fallback('mock-no-image'));
@@ -57,38 +60,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(fallback('mock-no-api-key'));
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(GEMINI_ENDPOINT, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-5',
-        max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        messages: [
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }],
+        },
+        contents: [
           {
             role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Image } },
-              { type: 'text', text: 'Analyze this STEM diagram and return the JSON described in the system prompt.' },
+            parts: [
+              {
+                inline_data: {
+                  mime_type: mediaType,
+                  data: base64Image,
+                },
+              },
+              {
+                text: 'Analyze this STEM diagram and return the JSON described in the system prompt.',
+              },
             ],
           },
         ],
+        generationConfig: {
+          maxOutputTokens: 2000,
+          responseMimeType: 'application/json',
+        },
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Anthropic API error', response.status, errText);
+      console.error('Gemini API error', response.status, errText);
       return NextResponse.json(fallback('mock-api-error'));
     }
 
     const data = await response.json();
-    const textBlock = (data?.content ?? []).find((b: any) => b.type === 'text');
-    const raw: string = textBlock?.text ?? '';
+    const raw = extractGeminiText(data);
     const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
 
     let parsed: DiagramData;
@@ -114,6 +126,12 @@ export async function POST(req: NextRequest) {
 
 function fallback(source: DiagramResponse['source']): DiagramResponse {
   return { ...pickRandomMock(), source };
+}
+
+function extractGeminiText(data: any): string {
+  const parts = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return '';
+  return parts.map((part: any) => (typeof part?.text === 'string' ? part.text : '')).join('');
 }
 
 function isValidDiagramData(d: any): d is DiagramData {

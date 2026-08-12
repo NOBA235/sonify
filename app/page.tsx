@@ -172,7 +172,7 @@ export default function Home() {
           }`}
         >
           Built for blind and low-vision STEM learners. Works fully offline with sample diagrams —
-          connect an ANTHROPIC_API_KEY server-side to parse real uploaded images.
+          connect a GEMINI_API_KEY server-side to parse real uploaded images.
         </footer>
       </div>
     </main>
