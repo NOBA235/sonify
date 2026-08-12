@@ -1,4 +1,4 @@
-# SonifySTEM AI
+# Sonify AI
 
 Turns STEM diagrams — graphs, circuits, biology diagrams — into interactive 2D
 spatial audio landscapes, so blind and low-vision students can explore them by
