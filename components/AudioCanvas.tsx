@@ -185,14 +185,14 @@ export default function AudioCanvas({
   const displayCursor = isSweeping ? sweepCursor : interactiveCursor;
 
   const borderClass = highContrast ? 'border-hc-border' : 'border-lab-border';
-  const bgClass = highContrast ? 'bg-hc-bg' : 'bg-lab-surface';
+  const bgClass = highContrast ? 'bg-hc-bg' : 'bg-white';
   const cursorRing = highContrast ? 'bg-hc-text' : 'bg-pitch';
   const sweepRing = highContrast ? 'bg-hc-text' : 'bg-pan';
-  const nodeBorder = highContrast ? 'border-hc-border' : 'border-pitch/70';
-  const curveStroke = highContrast ? '#FFEB3B' : '#FB7185';
+  const nodeBorder = highContrast ? 'border-hc-border bg-hc-bg/60' : 'border-pitch/80 bg-white/50';
+  const curveStroke = highContrast ? '#FFEB3B' : '#E11D48';
 
   return (
-    <div>
+    <div className="min-w-0">
       <div
         ref={containerRef}
         role="application"
@@ -203,7 +203,7 @@ export default function AudioCanvas({
             : 'No diagram loaded yet.'
         }
         aria-describedby="canvas-instructions"
-        className={`relative w-full overflow-hidden rounded-lg border-2 ${borderClass} ${bgClass} cursor-crosshair`}
+        className={`relative w-full cursor-crosshair overflow-hidden rounded-lg border ${borderClass} ${bgClass} shadow-inner`}
         style={{ aspectRatio: '4 / 3', touchAction: 'none' }}
         onPointerEnter={onPointerEnter}
         onPointerDown={onPointerDown}
@@ -231,7 +231,7 @@ export default function AudioCanvas({
                 <path
                   d="M 0 0 L 0 40 M 0 0 L 40 0"
                   fill="none"
-                  stroke={highContrast ? '#FFEB3B' : '#22314D'}
+                  stroke={highContrast ? '#FFEB3B' : '#DDE5EF'}
                   strokeWidth="1"
                 />
               </pattern>
@@ -273,8 +273,8 @@ export default function AudioCanvas({
             }}
           >
             <span
-              className={`absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                highContrast ? 'bg-hc-bg text-hc-text' : 'bg-lab-bg/90 text-lab-muted'
+              className={`absolute left-1/2 top-full mt-1 hidden -translate-x-1/2 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium shadow-sm sm:block ${
+                highContrast ? 'bg-hc-bg text-hc-text' : 'bg-white text-lab-muted'
               }`}
             >
               {node.label}
@@ -285,7 +285,9 @@ export default function AudioCanvas({
         {displayCursor && (
           <div
             aria-hidden="true"
-            className={`absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-offset-2 ring-offset-transparent ${
+            className={`absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-offset-2 ${
+              highContrast ? 'ring-offset-hc-bg' : 'ring-offset-white'
+            } ${
               isSweeping ? sweepRing : cursorRing
             }`}
             style={{ left: `${displayCursor.x}%`, top: `${100 - displayCursor.y}%` }}
@@ -295,7 +297,7 @@ export default function AudioCanvas({
         {!diagramData && (
           <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
             <p className={highContrast ? 'text-hc-text' : 'text-lab-muted'}>
-              Load a diagram above to start exploring it by sound.
+              Load a diagram to start.
             </p>
           </div>
         )}
@@ -313,22 +315,26 @@ export default function AudioCanvas({
       </div>
 
       {diagramData && (
-        <details className="mt-3">
+        <details
+          className={`mt-3 rounded-md border px-3 py-2 ${
+            highContrast ? 'border-hc-border bg-hc-surface' : 'border-lab-border bg-lab-surface2'
+          }`}
+        >
           <summary
             className={`cursor-pointer font-display text-xs font-semibold uppercase tracking-wide ${
               highContrast ? 'text-hc-text' : 'text-lab-muted'
             }`}
           >
-            Text summary of this diagram
+            Labels
           </summary>
-          <ul className={`mt-2 space-y-1 text-sm ${highContrast ? 'text-hc-text' : 'text-lab-text'}`}>
+          <ul className={`mt-2 grid gap-2 text-sm sm:grid-cols-2 ${highContrast ? 'text-hc-text' : 'text-lab-text'}`}>
             {diagramData.nodes.map((n) => (
-              <li key={n.id}>
+              <li key={n.id} className="min-w-0">
                 <span className="font-medium">{n.label}:</span> {n.description}
               </li>
             ))}
             {diagramData.curves.map((c) => (
-              <li key={c.id}>
+              <li key={c.id} className="min-w-0">
                 <span className="font-medium">Curve:</span> {c.name} ({c.points.length} points)
               </li>
             ))}

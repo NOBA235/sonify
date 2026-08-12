@@ -10,8 +10,8 @@
 
 html,
 body {
-  background-color: #0b1220;
-  color: #e7ecf5;
+  background-color: #f7f8fa;
+  color: #182033;
 }
 
 body {
@@ -49,6 +49,6 @@ body {
 }
 
 ::selection {
-  background: #5eead4;
-  color: #0b1220;
+  background: #14b8a6;
+  color: #ffffff;
 }

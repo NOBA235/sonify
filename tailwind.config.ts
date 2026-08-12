@@ -9,26 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // "Night lab / sonar" palette — the default theme
+        // Clean workspace palette for the default product theme.
         lab: {
-          bg: '#0B1220',
-          surface: '#111B2E',
-          surface2: '#16223A',
-          border: '#22314D',
-          text: '#E7ECF5',
-          muted: '#8493AD',
+          bg: '#F7F8FA',
+          surface: '#FFFFFF',
+          surface2: '#F0F3F7',
+          border: '#DCE3EC',
+          text: '#182033',
+          muted: '#667085',
         },
-        // Y-axis / pitch accent (cool)
         pitch: {
-          DEFAULT: '#5EEAD4',
-          dim: '#2C7A6E',
+          DEFAULT: '#14B8A6',
+          dim: '#0F766E',
         },
-        // X-axis / pan accent (warm)
         pan: {
-          DEFAULT: '#FB7185',
-          dim: '#8A3B44',
+          DEFAULT: '#E11D48',
+          dim: '#9F1239',
         },
-        // High-contrast accessibility theme — pure black / yellow
+        // High-contrast accessibility theme: pure black / yellow.
         hc: {
           bg: '#000000',
           surface: '#0A0A0A',

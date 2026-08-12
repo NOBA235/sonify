@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SonifySTEM AI — Hear the Diagram',
+  title: 'Sonify AI - Hear the Diagram',
   description:
-    'SonifySTEM AI turns STEM diagrams — graphs, circuits, biology diagrams — into interactive 2D spatial audio landscapes for blind and low-vision students.',
+    'Sonify AI turns STEM diagrams into interactive spatial audio for blind and low-vision students.',
 };
 
 export default function RootLayout({

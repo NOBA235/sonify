@@ -25,20 +25,20 @@ export default function DiagramUploader({
 
   const surface = highContrast
     ? 'bg-hc-bg border-hc-border text-hc-text'
-    : 'bg-lab-surface border-lab-border text-lab-text';
+    : 'bg-lab-surface border-lab-border text-lab-text shadow-sm';
   const mutedText = highContrast ? 'text-hc-text/80' : 'text-lab-muted';
   const primaryBtn = highContrast
     ? 'bg-hc-text text-black hover:bg-yellow-200 border-2 border-hc-border'
-    : 'bg-pitch text-lab-bg hover:brightness-110';
+    : 'border border-[#243044] bg-[#243044] text-white shadow-[0_1px_2px_rgba(24,32,51,0.08),0_8px_24px_rgba(24,32,51,0.10)] hover:border-[#111827] hover:bg-[#111827]';
   const secondaryBtn = highContrast
     ? 'border-2 border-hc-border text-hc-text hover:bg-hc-text hover:text-black'
-    : 'border border-lab-border text-lab-text hover:border-pitch hover:text-pitch';
+    : 'border border-lab-border bg-lab-surface2 text-lab-text hover:border-pitch hover:bg-white';
 
   async function handleFile(file: File) {
     setError(null);
     setFileName(file.name);
     onLoadingChange(true);
-    onStatus(`Analyzing uploaded diagram: ${file.name}. Please wait.`);
+    onStatus(`Analyzing ${file.name}.`);
     try {
       const imageUrl = URL.createObjectURL(file);
       const form = new FormData();
@@ -52,13 +52,13 @@ export default function DiagramUploader({
       const usedFallback = data.source && data.source !== 'vision-model';
       onStatus(
         usedFallback
-          ? `Could not reach the vision model, so a sample diagram with ${nodeCount} nodes was loaded instead. Explore it now.`
-          : `Diagram analyzed. Found ${nodeCount} labeled points and ${curveCount} curve${curveCount === 1 ? '' : 's'}. Explore it now.`
+          ? `Parser unavailable. Loaded a sample with ${nodeCount} labels.`
+          : `Parsed ${nodeCount} labels and ${curveCount} curve${curveCount === 1 ? '' : 's'}.`
       );
     } catch (err) {
       console.error(err);
-      setError('Something went wrong analyzing that image. Try a sample diagram below instead.');
-      onStatus('Upload failed. Try one of the sample diagrams instead.');
+      setError('Upload failed. Choose a sample or try another image.');
+      onStatus('Upload failed.');
     } finally {
       onLoadingChange(false);
     }
@@ -70,22 +70,25 @@ export default function DiagramUploader({
     setFileName(null);
     setError(null);
     onDiagramLoaded({ ...entry.data, source: 'sample', label: entry.label }, null);
-    onStatus(`Loaded sample diagram: ${entry.label}. ${entry.data.nodes.length} labeled points, ${entry.data.curves.length} curve${entry.data.curves.length === 1 ? '' : 's'}. Explore it now.`);
+    onStatus(`${entry.label} loaded. ${entry.data.nodes.length} labels, ${entry.data.curves.length} curve${entry.data.curves.length === 1 ? '' : 's'}.`);
   }
 
   return (
     <section
       aria-labelledby="uploader-heading"
-      className={`rounded-lg border-2 p-4 ${surface}`}
+      aria-busy={loading}
+      className={`rounded-lg border p-3 sm:p-4 ${surface}`}
     >
-      <h2 id="uploader-heading" className="font-display text-sm font-semibold uppercase tracking-wide">
-        1. Load a diagram
-      </h2>
-      <p className={`mt-1 text-sm ${mutedText}`}>
-        Upload a photo of a graph, circuit, or biology diagram, or start instantly with a sample.
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="uploader-heading" className="font-display text-base font-semibold">
+          Sources
+        </h2>
+        <span className={`hidden rounded-full px-2 py-1 text-[11px] font-medium sm:inline-flex ${highContrast ? 'bg-hc-surface' : 'bg-lab-surface2'} ${mutedText}`}>
+          Gemini parser
+        </span>
+      </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      <div className="mt-3">
         <input
           ref={inputRef}
           id="diagram-file-input"
@@ -99,12 +102,12 @@ export default function DiagramUploader({
         />
         <label
           htmlFor="diagram-file-input"
-          className={`cursor-pointer rounded-md px-4 py-2 font-display text-sm font-semibold transition ${primaryBtn}`}
+          className={`flex min-h-11 w-full cursor-pointer items-center justify-center rounded-md px-4 py-2.5 font-display text-sm font-semibold transition ${primaryBtn}`}
         >
-          {loading ? 'Analyzing…' : 'Upload diagram image'}
+          {loading ? 'Analyzing...' : 'Upload diagram'}
         </label>
         {fileName && !loading && (
-          <span className={`text-xs font-mono ${mutedText}`}>{fileName}</span>
+          <p className={`mt-2 truncate text-xs font-mono ${mutedText}`}>{fileName}</p>
         )}
       </div>
 
@@ -115,15 +118,15 @@ export default function DiagramUploader({
       )}
 
       <div className="mt-4">
-        <p className={`text-xs font-mono uppercase tracking-wide ${mutedText}`}>Or try a sample</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <p className={`text-xs font-mono font-medium uppercase tracking-wide ${mutedText}`}>Samples</p>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
           {Object.values(MOCK_DIAGRAMS).map((entry) => (
             <button
               key={entry.key}
               type="button"
               onClick={() => loadSample(entry.key)}
               disabled={loading}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 ${secondaryBtn}`}
+              className={`min-h-10 rounded-md px-3 py-2 text-left text-sm font-medium transition disabled:opacity-50 ${secondaryBtn}`}
             >
               {entry.label}
             </button>
