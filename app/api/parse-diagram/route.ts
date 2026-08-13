@@ -6,6 +6,51 @@ export const runtime = 'nodejs';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const MAX_OUTPUT_TOKENS = 8192;
+
+const DIAGRAM_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    nodes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          label: { type: 'string' },
+          description: { type: 'string' },
+          xPercent: { type: 'number' },
+          yPercent: { type: 'number' },
+          radiusPercent: { type: 'number' },
+        },
+        required: ['id', 'label', 'description', 'xPercent', 'yPercent', 'radiusPercent'],
+      },
+    },
+    curves: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          points: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                x: { type: 'number' },
+                y: { type: 'number' },
+              },
+              required: ['x', 'y'],
+            },
+          },
+        },
+        required: ['id', 'name', 'points'],
+      },
+    },
+  },
+  required: ['nodes', 'curves'],
+};
 
 const SYSTEM_PROMPT = `You are the vision pipeline for SonifySTEM AI, an accessibility tool that converts STEM diagrams into spatial audio for blind and low-vision students.
 
@@ -24,6 +69,7 @@ Coordinate system: xPercent/x runs 0 (left) to 100 (right). yPercent/y runs 0 (b
 
 Rules:
 - Identify every labeled component, landmark, or key point (axis intercepts, vertices, circuit components, organelles, etc.) as a node with a short label and a one-to-two sentence spoken-friendly description suitable for text-to-speech.
+- Keep each description concise, ideally under 18 words.
 - radiusPercent should be roughly 4-12, matching the visual size of the labeled element.
 - If the diagram contains a continuous curve, wire path, or function plot, trace it as an ordered list of 15-30 points under "curves". If there is no curve, return an empty array for "curves".
 - Return only the JSON object. Nothing else.`;
@@ -87,8 +133,9 @@ export async function POST(req: NextRequest) {
           },
         ],
         generationConfig: {
-          maxOutputTokens: 2000,
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
           responseMimeType: 'application/json',
+          responseSchema: DIAGRAM_RESPONSE_SCHEMA,
         },
       }),
     });
